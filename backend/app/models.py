@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Union
 
 class TodoBase(BaseModel):
@@ -16,4 +17,6 @@ class TodoUpdate(BaseModel):
 class TodoOut(TodoBase):
     id: int
     completed: bool
+    created_at: datetime
 
+    model_config = ConfigDict(from_attributes=True)

@@ -3,9 +3,17 @@ const API = "http://127.0.0.1:8000";
 document.getElementById("addBtn").addEventListener("click", createTodo);
 
 async function loadTodos() {
-  const res = await fetch(`${API}/todos`);
-  const todos = await res.json();
+  const filter = document.getElementById("filter").value;
 
+  let url = `${API}/todos`;
+
+  if (filter !== "") {
+    url += `?completed=${filter}`;
+  }
+  
+  const res = await fetch(url);
+  const todos = await res.json();
+  
   const list = document.getElementById("list");
   list.innerHTML = "";
 
@@ -13,11 +21,21 @@ async function loadTodos() {
     const li = document.createElement("li");
 
     const title = document.createElement("div");
-    title.className = "todo-title" + (t.completed ? " completed" : "");
-    title.textContent = `${t.id}: ${t.title}`;
+    title.className = "title";
+
+    const todo = document.createElement("div");
+todo.className = "todo" + (t.completed ? " completed" : "");
+    todo.textContent = `${t.title}`;
+    
+    const todo_id = document.createElement("div");
+    todo_id.className = "todo_id";
+    todo_id.textContent = `#ID: ${t.id}`;
+    
+    title.appendChild(todo);
+    title.appendChild(todo_id);
 
     const desc = document.createElement("div");
-    desc.className = "todo-desc";
+    desc.className = "todo-desc" + (t.completed ? " completed" : "");
     desc.textContent = t.description ?? "";
 
     const actions = document.createElement("div");
@@ -40,14 +58,29 @@ async function loadTodos() {
     deleteBtn.textContent = "Delete";
     deleteBtn.onclick = () => deleteTodo(t.id);
 
+    const created = document.createElement("div");
+    created.className = "todo-meta";
+
+    const dateObj = new Date(t.created_at);
+
+    const time = document.createElement("div");
+    time.textContent = dateObj.toLocaleTimeString();
+
+    const date = document.createElement("div");
+    date.textContent = dateObj.toLocaleDateString();
+
+    created.appendChild(time);
+    created.appendChild(date);
+
     actions.appendChild(toggleBtn);
     actions.appendChild(editBtn);
     actions.appendChild(deleteBtn);
+    actions.appendChild(created)
 
     li.appendChild(title);
     li.appendChild(desc);
     li.appendChild(actions);
-
+    
     list.appendChild(li);
   });
 }
@@ -81,5 +114,7 @@ async function deleteTodo(id) {
   await fetch(`${API}/todos/${id}`, { method: "DELETE" });
   loadTodos();
 }
+
+document.getElementById("filter").addEventListener("change", loadTodos);
 
 loadTodos();
