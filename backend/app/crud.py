@@ -1,36 +1,48 @@
-from typing import Dict, Union
-from .models import TodoCreate, TodoUpdate, TodoOut
+from .models import TodoCreate, TodoUpdate
+from sqlalchemy.orm import Session
+from . import orm_models
 
-_db: Dict[int, TodoOut] = {}
-_id_counter = 1
-
-def create_todo(todo: TodoCreate) -> TodoOut:
-    global _id_counter
-    todo_out = TodoOut(
-            id = _id_counter,
-            title = todo.title,
-            description = todo.description,
-            completed = False,
+def create_todo(db: Session, todo: TodoCreate):
+    db_todo = orm_models.Todo(
+        title=todo.title,
+        description=todo.description,
+        completed=False
     )
-    _db[_id_counter] = todo_out
-    _id_counter += 1
-    return todo_out
+    db.add(db_todo)
+    db.commit()
+    db.refresh(db_todo)
+    return db_todo
 
-def get_all_todos() -> list[TodoOut]:
-    return list(_db.values())
 
-def get_todo(todo_id : int) -> Union[TodoOut, None]:
-    return _db.get(todo_id)
+def get_all_todos(db: Session):
+    return db.query(orm_models.Todo).all()
 
-def update_todo(todo_id : int, data : TodoUpdate) -> Union[TodoOut, None]:
-    todo = _db.get(todo_id);
+
+def get_todo(db: Session, todo_id: int):
+    return db.query(orm_models.Todo).filter(
+        orm_models.Todo.id == todo_id
+    ).first()
+
+def update_todo(db: Session, todo_id: int, data: TodoUpdate):
+    todo = get_todo(db, todo_id)
     if not todo:
         return None
-    updated = todo.model_copy(update=data.model_dump(exclude_unset=True))
-    _db[todo_id] =  updated
-    return updated;
 
-def delete_todo(todo_id : int) -> bool:
-    return _db.pop(todo_id, None) is not None
+    update_data = data.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(todo, key, value)
+
+    db.commit()
+    db.refresh(todo)
+    return todo
 
 
+def delete_todo(db: Session, todo_id: int):
+    todo = get_todo(db, todo_id)
+    if not todo:
+        return False
+
+    db.delete(todo)
+    db.commit()
+    return True

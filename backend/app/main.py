@@ -1,40 +1,56 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .models import TodoCreate, TodoOut, TodoUpdate
-from . import crud
+from sqlalchemy.orm import Session
+from .database import SessionLocal, engine
+from . import orm_models, crud, models
 
-app = FastAPI(title = "Todo Manager API")
+orm_models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title = "Todo List")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.post("/todos", response_model=TodoOut, status_code=status.HTTP_201_CREATED)
-def create_todo(todo : TodoCreate):
-    return crud.create_todo(todo)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@app.get("/todos", response_model=list[TodoOut])
-def list_todos():
-    return crud.get_all_todos()
+@app.post("/todos", response_model=models.TodoOut)
+def create(todo: models.TodoCreate, db: Session = Depends(get_db)):
+    return crud.create_todo(db, todo)
 
-@app.get("/todos/{todo_id}", response_model=TodoOut)
-def get_todo(todo_id : int):
-    todo = crud.get_todo(todo_id)
+
+@app.get("/todos", response_model=list[models.TodoOut])
+def list_todos(db: Session = Depends(get_db)):
+    return crud.get_all_todos(db)
+
+
+@app.get("/todos/{todo_id}", response_model=models.TodoOut)
+def get(todo_id: int, db: Session = Depends(get_db)):
+    todo = crud.get_todo(db, todo_id)
     if not todo:
-        raise HTTPException(status_code=404, detail="Todo Not Found")
+        raise HTTPException(status_code=404)
     return todo
 
-@app.put("/todos/{todo_id}", response_model=TodoOut)
-def update_todo(todo_id : int, data : TodoUpdate):
-    todo = crud.update_todo(todo_id, data)
+
+@app.put("/todos/{todo_id}", response_model=models.TodoOut)
+def update(todo_id: int, data: models.TodoUpdate, db: Session = Depends(get_db)):
+    todo = crud.update_todo(db, todo_id, data)
     if not todo:
-        raise HTTPException(status_code=404, detail="Todo Not Found")
+        raise HTTPException(status_code=404)
     return todo
+
 
 @app.delete("/todos/{todo_id}")
-def delete_todo(todo_id : int):
-    if not crud.delete_todo(todo_id):
-        raise HTTPException(status_code=404, detail="Todo Not Found")
+def delete(todo_id: int, db: Session = Depends(get_db)):
+    if not crud.delete_todo(db, todo_id):
+        raise HTTPException(status_code=404)
+    return {"message": "deleted"}
