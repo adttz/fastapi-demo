@@ -46,9 +46,12 @@ li {
 }
 
 .todo-desc {
-  margin-left: 16px;
   font-size: 0.9em;
   color: #555;
+  padding-top: 4px;
+  padding-bottom: 10px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .completed {
@@ -56,8 +59,29 @@ li {
   color: #888;
 }
 
+.title {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.todo_id {
+  font-size: 90%;
+  font-style: italic;
+  margin-left: auto;
+}
+
+
 .actions {
-  margin-top: 8px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.todo-meta {
+  color: #888;
+  font-style: italic;
+  margin-left: auto;
 }
 
 .actions button {

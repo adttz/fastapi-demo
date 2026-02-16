@@ -22,7 +22,10 @@ def get_all_todos(db: Session, completed: Union[bool, None]= None):
             orm_models.Todo.completed == completed
         )
 
-    return query.all()
+    return query.order_by(
+        orm_models.Todo.completed.asc(),
+        orm_models.Todo.id.asc()
+    ).all()
 
 def get_todo(db: Session, todo_id: int):
     return db.query(orm_models.Todo).filter(
