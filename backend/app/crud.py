@@ -1,3 +1,4 @@
+from typing import Union
 from .models import TodoCreate, TodoUpdate
 from sqlalchemy.orm import Session
 from . import orm_models
@@ -13,10 +14,15 @@ def create_todo(db: Session, todo: TodoCreate):
     db.refresh(db_todo)
     return db_todo
 
+def get_all_todos(db: Session, completed: Union[bool, None]= None):
+    query = db.query(orm_models.Todo)
 
-def get_all_todos(db: Session):
-    return db.query(orm_models.Todo).all()
+    if completed is not None:
+        query = query.filter(
+            orm_models.Todo.completed == completed
+        )
 
+    return query.all()
 
 def get_todo(db: Session, todo_id: int):
     return db.query(orm_models.Todo).filter(

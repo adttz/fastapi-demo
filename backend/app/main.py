@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from typing import Union
 from .database import SessionLocal, engine
 from . import orm_models, crud, models
 
@@ -28,10 +29,13 @@ def create(todo: models.TodoCreate, db: Session = Depends(get_db)):
     return crud.create_todo(db, todo)
 
 
-@app.get("/todos", response_model=list[models.TodoOut])
-def list_todos(db: Session = Depends(get_db)):
-    return crud.get_all_todos(db)
+# @app.get("/todos", response_model=list[models.TodoOut])
+# def list_todos(db: Session = Depends(get_db)):
+#     return crud.get_all_todos(db)
 
+@app.get("/todos", response_model=list[models.TodoOut])
+def list_todos(completed: Union[bool, None] = Query(default=None), db: Session = Depends(get_db)):
+    return crud.get_all_todos(db, completed)
 
 @app.get("/todos/{todo_id}", response_model=models.TodoOut)
 def get(todo_id: int, db: Session = Depends(get_db)):

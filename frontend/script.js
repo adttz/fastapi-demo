@@ -3,7 +3,15 @@ const API = "http://127.0.0.1:8000";
 document.getElementById("addBtn").addEventListener("click", createTodo);
 
 async function loadTodos() {
-  const res = await fetch(`${API}/todos`);
+  const filter = document.getElementById("filter").value;
+
+  let url = `${API}/todos`;
+
+  if (filter !== "") {
+    url += `?completed=${filter}`;
+  }
+
+  const res = await fetch(url);
   const todos = await res.json();
 
   const list = document.getElementById("list");
@@ -81,5 +89,7 @@ async function deleteTodo(id) {
   await fetch(`${API}/todos/${id}`, { method: "DELETE" });
   loadTodos();
 }
+
+document.getElementById("filter").addEventListener("change", loadTodos);
 
 loadTodos();
