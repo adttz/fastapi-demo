@@ -1,36 +1,35 @@
-from typing import Union
-from .models import TodoCreate, TodoUpdate
 from sqlalchemy.orm import Session
-from . import orm_models
+from app.models.todo import Todo
+from app.schemas.todo import TodoCreate, TodoUpdate
+from typing import Union
 
 def create_todo(db: Session, todo: TodoCreate):
-    db_todo = orm_models.Todo(
+    db_todo = Todo(
         title=todo.title,
         description=todo.description,
-        completed=False
+        completed=False,
     )
     db.add(db_todo)
     db.commit()
     db.refresh(db_todo)
     return db_todo
 
-def get_all_todos(db: Session, completed: Union[bool, None]= None):
-    query = db.query(orm_models.Todo)
+
+def get_all_todos(db: Session, completed: Union[bool, None] = None):
+    query = db.query(Todo)
 
     if completed is not None:
-        query = query.filter(
-            orm_models.Todo.completed == completed
-        )
+        query = query.filter(Todo.completed == completed)
 
     return query.order_by(
-        orm_models.Todo.completed.asc(),
-        orm_models.Todo.id.asc()
+        Todo.completed.asc(),
+        Todo.id.asc(),
     ).all()
 
+
 def get_todo(db: Session, todo_id: int):
-    return db.query(orm_models.Todo).filter(
-        orm_models.Todo.id == todo_id
-    ).first()
+    return db.query(Todo).filter(Todo.id == todo_id).first()
+
 
 def update_todo(db: Session, todo_id: int, data: TodoUpdate):
     todo = get_todo(db, todo_id)

@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "http://127.0.0.1:8000/api/v1";
 
 document.getElementById("addBtn").addEventListener("click", createTodo);
 
